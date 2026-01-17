@@ -1,0 +1,36 @@
+services:
+  headscale:
+    image: 'headscale/headscale:latest'
+    container_name: 'headscale'
+    restart: 'unless-stopped'
+    command: 'serve'
+    ports:
+      - "8080:8080"
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs/headscale:/etc/headscale'
+    environment:
+      TZ: 'America/Edmonton'
+
+  headplane:
+    container_name: headplane
+    image: ghcr.io/tale/headplane:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs/headscale:/etc/headscale'
+      - './configs/headplane:/etc/headplane'
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    environment:
+      # This is always required for Headplane to work
+      COOKIE_SECRET: 'abcdefghijklmnopqrstuvwxyz'
+      HEADSCALE_INTEGRATION: 'docker'
+      HEADSCALE_CONTAINER: 'headscale'
+      DISABLE_API_KEY_LOGIN: 'false'
+      HOST: '0.0.0.0'
+      PORT: '3000'
+
+      # Only set this to false if you aren't behind a reverse proxy
+      COOKIE_SECURE: 'true'
